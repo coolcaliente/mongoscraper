@@ -12,7 +12,7 @@ var cheerio = require("cheerio");
 // Require all models
 var db = require("./models");
 
-var PORT = 3000;
+var PORT = process.env.PORT || 3000;
 
 // Initialize Express
 var app = express();
@@ -43,7 +43,7 @@ mongoose.connect(MONGODB_URI);
 // A GET route for scraping the echoJS website
 app.get("/scrape", function(req, res) {
   // First, we grab the body of the html with request
-  axios.get("http://www.echojs.com/").then(function(response) {
+  axios.get("http://www.nyt.com/").then(function(response) {
     // Then, we load that into cheerio and save it to $ for a shorthand selector
     var $ = cheerio.load(response.data);
 
@@ -59,6 +59,10 @@ app.get("/scrape", function(req, res) {
       result.link = $(this)
         .children("a")
         .attr("href");
+      result.summary = $(this)
+        .children("p")
+        .children(".summary")
+        .text();
 
       // Create a new Article using the `result` object built from scraping
       db.Article.create(result)
@@ -141,6 +145,7 @@ app.get("/saved", function(req, res) {
         res.json(err);
       });
   });
+  
 
 // Start the server
 app.listen(PORT, function() {
